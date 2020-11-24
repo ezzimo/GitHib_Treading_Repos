@@ -3,9 +3,9 @@ import json
 import sys
 from collections import Counter
 from datetime import datetime, timedelta, date
+from tabulate import tabulate
 from LanguagesRepoCounter import LanguagesCounter
 from RepoListLanguages import RepoListLanguages
-from tabulate import tabulate
 
 
 #getting the date of one mounth ago from today
@@ -41,7 +41,7 @@ for key in DicDataList:
 		print("                           ", DicDataList[key][i])
 
 
-# Displaye the number of repos using every language in a table 
+# Displaye the number of repos using every language in a table
 table = []
 for key in Lang_Dic_Count:
 	under_table=[]
