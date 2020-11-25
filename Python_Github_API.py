@@ -1,51 +1,48 @@
-import urllib.request, urllib.parse, urllib.error
-import json
-import sys
-from collections import Counter
+import json, sys, requests
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, date
 from tabulate import tabulate
-from LanguagesRepoCounter import LanguagesCounter
-from RepoListLanguages import RepoListLanguages
+from LanguagesRepoCounter import languages_counter
+from RepoListLanguages import groupby_language
 
+def get_data():
+    one_month_ago = datetime.date(datetime.now()) - timedelta(days=30)
+    url = "https://api.github.com/search/repositories"
+    params = {"q": f">{one_month_ago.isoformat()}",
+              "sort": "stars",
+              "order": "desc",
+              "page": 1,
+              "per_page": 100}
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    return response.json()["items"]
 
-#getting the date of one mounth ago from today
-One_Mouth_ago_date = datetime.date(datetime.now()) - timedelta(days=30)
-
-url = 'https://api.github.com/search/repositories?q=created:%3E'+One_Mouth_ago_date.isoformat()+'&sort=stars&order=desc&page=1&per_page=100'
-
-data_connection_request  = urllib.request.urlopen(url)
-
-unicoded_data = data_connection_request.read().decode()
-
-try:
-	json_data = json.loads(unicoded_data)
-except:
-	json_data = None
-# testing retrieaved data
-if not json_data or json_data["total_count"]<1:
-	print(json_data)
-	sys.exit('######## Failure To Retrieve ########')
-
-
+def groupby(values, key):
+    grouped = defaultdict(list)
+    for x in values:
+        grouped[x[key]].append(x)
+    return grouped
+grouped_repos = groupby(get_data(), "language")
 
 #Counting the number of repo using every language
-Lang_Dic_Count = LanguagesCounter(json_data)
+counts = {language: len(repos) for language, repos in grouped_repos.items()}
 
-# Getting the list of repo using every language
-DicDataList = RepoListLanguages(json_data, Lang_Dic_Count)
+urls = {language: [repo["html_url"] for repo in repos]
+        for language, repos in grouped_repos.items()}
 
 # Displaye the repo's urls for every language
-for key in DicDataList:
+for key in urls:
 	print(key, ' language used in')
-	for i in range(len(DicDataList[key])):
-		print("                           ", DicDataList[key][i])
+	for i in range(len(urls[key])):
+    #for language, repos in grouped_repos.items()
+		print("                           ", urls[key][i])
 
 
 # Displaye the number of repos using every language in a table
 table = []
-for key in Lang_Dic_Count:
+for key in counts:
 	under_table=[]
 	under_table.append(key)
-	under_table.append(Lang_Dic_Count[key])
+	under_table.append(counts[key])
 	table.append(under_table)
 print(tabulate(table, headers=('Language', 'number of Repo using it'), tablefmt="grid"))

@@ -1,12 +1,10 @@
-def RepoListLanguages(Data, list):
-	'''
-	return the list of repositories from Data parameter for every programming language in the list parameter as a dictionary with the programming language as key and a list of repositories as value
-	'''
-	languagesRepo = {}
-	for key in list:
-		languagesRepo[key]= []
-		for repo in range(len(Data["items"])):
-			if (key == Data["items"][repo]["language"]):
-				languagesRepo[key].append(Data["items"][repo]["html_url"])
+from collections import defaultdict
 
-	return languagesRepo
+def groupby_language(data):
+    '''
+    return the list of repositories from data parameter for every programming language as a dictionary with the programming language as key and a list of repositories as value
+    '''
+    repo_urls = defaultdict(list)
+    for repo in data["items"]:
+        repo_urls[repo["language"]].append(repo["html_url"])
+    return repo_urls
